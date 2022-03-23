@@ -1,5 +1,6 @@
-# VBASS
-VBASS is a new model to integrate single cell genomics data in identifying de novo risk genes. 
+## VBASS
+  
+  VBASS is a new model to integrate single cell genomics data in identifying de novo risk genes. 
 
 ## Environment:
   
