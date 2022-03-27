@@ -67,6 +67,8 @@ correlation_array <- as.data.frame(cor(point.estimate.train.input, mean.pi, meth
 to.plot <- data.frame(Simulated.correlation=correlation_array$V1,
                       Real.correlation=real.correlation$V1,
                       cell_type=rownames(real.correlation))
+# remove unknown cell types
+to.plot <- to.plot[grep("Unk", to.plot$cell_type, invert = T),]
 p <- ggplot(to.plot, aes(x=Simulated.correlation, y=Real.correlation, label=cell_type)) +
   geom_point(alpha=0.3) +
   stat_smooth(method = "lm", formula = y~x) +

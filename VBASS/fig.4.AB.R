@@ -100,30 +100,6 @@ result.folder <- paste0('figs/')
 dir.create(result.folder)
 
 dnv_table <- all_dnv_table
-# need a histogram of pi
-p<-ggplot(dnv_table, aes(x=pi,col=group, fill=group)) + 
-  geom_density(alpha=.1) +
-  theme_light()
-# geom_histogram(aes(y=..density..), alpha=0.1, 
-#                position="identity", binwidth = 0.05) 
-ggsave(plot = p, filename = paste0(result.folder, 'compare.pi.pdf'),
-       width = 5, height = 2)
-
-p<-ggplot(dnv_table, aes(x=LGD_mean,col=group, fill=group)) + 
-  geom_density(alpha=.1) +
-  theme_light()
-# geom_histogram(aes(y=..density..), alpha=0.1, 
-#                position="identity", binwidth = 0.05) 
-ggsave(plot = p, filename = paste0(result.folder, 'compare.LGD_mean.pdf'),
-       width = 5, height = 2)
-
-p<-ggplot(dnv_table, aes(x=Dmis_mean,col=group, fill=group)) + 
-  geom_density(alpha=.1) +
-  theme_light()
-# geom_histogram(aes(y=..density..), alpha=0.1, 
-#                position="identity", binwidth = 0.05) 
-ggsave(plot = p, filename = paste0(result.folder, 'compare.Dmis_mean.pdf'),
-       width = 5, height = 2)
 
 # check the true FDR vs FDR
 dnv_table.ranked <- dnv_table[order(dnv_table$qvalue), ]
