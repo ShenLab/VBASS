@@ -18,6 +18,8 @@ Bayesian.FDR <- function(log_BF, alpha=0.05) {
 
 train.input <- read.csv('AutoEncoderTADA.input/input.x.csv', row.names = 1)
 train.input.var <- read.csv('AutoEncoderTADA.input/input.x_var.csv', row.names = 1)
+train.labels <- read.csv('AutoEncoderTADA.input/input.label.csv')
+train.positive <- as.character(train.labels$X[train.labels$label==1 & !is.na(train.labels$label)])
 
 input.dnv.table <- cbind(train.input[,c('dn_LGD', 'dn_Dmis')],
                    train.input.var[,c('mut_LGD', 'mut_Dmis')])
@@ -83,3 +85,13 @@ p <- ggplot(dnv_table, aes(x=qvalue, y=TADA_qvalue, col=group, label=label)) +
 ggsave(plot = p, filename = paste0('figs/fig.6.A.pdf'),
        width = 6, height = 6)
 
+# supplementary table
+dnv_table$GeneID <- TADA_dnv_table$Gene[match(rownames(dnv_table),TADA_dnv_table$HGNC)]
+write.csv(dnv_table, file = 'figs/table.S4.csv')
+
+# remove train positive genes
+dnv_table <- dnv_table[!rownames(dnv_table) %in% train.positive,]
+dnv_table <- dnv_table[order(dnv_table$log_BF, decreasing = T),]
+dnv_table$qvalue <- Bayesian.FDR(dnv_table$log_BF)$FDR
+dnv_table$PPA <- 1/(exp(dnv_table$log_BF) + 1)
+write.csv(dnv_table, file = 'figs/table.S5.csv')

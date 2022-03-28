@@ -76,41 +76,6 @@ p <- ggplot(to.plot.all, aes(x=mut.rate.rank, y=recall, col=model.name)) +
 ggsave(plot = p, filename = paste0(result.folder, 'fig.', samplesize, '/c.', C, '.size.', samplesize, '.recall.mut.pdf'),
        width = 5, height = 4)
 
-# plot for cov rank
-# qvalue.cutoff <- c(0.05)
-to.plot.all <- c()
-table.true.genes <- table.all[table.all$Gene %in% true.genes,]
-table.true.genes <- table.true.genes[order(table.true.genes$covariates_reordered),]
-for (j in qvalue.cutoff) {
-  extTADA.recall <- rep(NA, length(true.genes))
-  xTADA.recall <- rep(NA, length(true.genes))
-  poisson.recall <- rep(NA, length(true.genes))
-  cov.mean <- rep(NA, length(true.genes))
-  for (i in 1:length(true.genes)) {
-    gene.table <- table.true.genes[((i-1)*100+1):i*100,]
-    extTADA.recall[i] <- sum(gene.table$extTADA_qvalue<=j)/100
-    xTADA.recall[i] <- sum(gene.table$xTADA_qvalue<=j)/100
-    poisson.recall[i] <- sum(gene.table$poisson_qvalue<=j)/100
-    cov.mean[i] <- mean(gene.table$covariates_reordered)
-  }
-  to.plot <- data.frame(recall=c(extTADA.recall, xTADA.recall, poisson.recall),
-                        cov.mean = rep(cov.mean, 3),
-                        model.name=c(paste0(rep('extTADA', length(true.genes)), '.qvalue.', j),
-                                     paste0(rep('xTADA', length(true.genes)), '.qvalue.', j),
-                                     paste0(rep('poisson', length(true.genes)), '.qvalue.', j)
-                        )
-  )
-  to.plot.all <- rbind(to.plot.all, to.plot)
-}
-p <- ggplot(to.plot.all, aes(x=cov.mean, y=recall, col=model.name)) +
-  # geom_point() +
-  geom_smooth() +
-  xlab('expression level') +
-  # geom_line() +
-  theme_light()
-ggsave(plot = p, filename = paste0(result.folder, 'fig.', samplesize, '/c.', C, '.size.', samplesize, '.recall.cov.pdf'),
-       width = 5, height = 4)
-
 
 
 

@@ -1,9 +1,8 @@
 args = commandArgs(trailingOnly=TRUE)
 # C <- as.numeric(args[1])
-# samplesize <- as.numeric(args[1])
-# seed <- args[3]
+samplesize <- as.numeric(args[1])
 C <- 0.28242408
-samplesize <- 5000
+# samplesize <- 5000
 seed <- NA
 result.folder = "figs/"
 dir.create(paste0(result.folder, 'fig.', samplesize, '/'))
@@ -55,50 +54,6 @@ Bayesian.FDR <- function(PP, alpha=0.05) {
   while (t <= length(q0) & mean(q0[1:t]) <= alpha) { t <- t+1 }
   return (list(FDR=FDR, ND=t))
 }
-
-# table <- table[order(table$xTADA_PP), ]
-# table$xTADA_qvalue <- Bayesian.FDR(table$xTADA_PP)$FDR
-# table <- table[order(table$extTADA_PP), ]
-# table$extTADA_qvalue <- Bayesian.FDR(table$extTADA_PP)$FDR
-
-threshold_1 <- 0.1
-threshold_2 <- 0.1
-
-library(ggplot2)
-# Covariate Rank
-p3 <- ggplot(table, aes(x=extTADA_qvalue, y=xTADA_qvalue, col=cov.Rank, label = Gene)) +
-  geom_point(size=0.2) +
-  geom_vline(xintercept=c(threshold_1), col="red", alpha=0.5, linetype='dotdash') +
-  geom_hline(yintercept=c(threshold_2), col="red", alpha=0.5, linetype='dotdash') + 
-  theme_light() + ggtitle("Comparison of extTADA and xTADA q-values") +
-  scale_color_gradient2(midpoint=0.5, low="blue", mid="white", high="red", space ="Lab" ) +
-  ggeasy::easy_center_title()
-
-ggsave(plot = p3, filename = paste0(result.folder, 'fig.', samplesize, '/c.', C, '.size.', samplesize, '.simulation.covRank.pdf'),
-       width = 5, height = 4)
-
-# True Label
-p2 <- ggplot(table, aes(x=extTADA_qvalue, y=xTADA_qvalue, col=factor(True_Label), label = Gene)) +
-  geom_point(size=0.2) +
-  geom_vline(xintercept=c(threshold_1), col="red", alpha=0.5, linetype='dotdash') +
-  geom_hline(yintercept=c(threshold_2), col="red", alpha=0.5, linetype='dotdash') + 
-  theme_light() + ggtitle("Comparison of extTADA and xTADA q-values") +
-  scale_colour_discrete(name="True Label", labels=c("Non Risk","Risk")) +
-  ggeasy::easy_center_title()
-  
-ggsave(plot = p2, filename = paste0(result.folder, 'fig.', samplesize, '/c.', C, '.size.', samplesize, '.simulation.TrueLabel.pdf'),
-       width = 5, height = 4)
-
-# Mutation Rank
-p4 <- ggplot(table, aes(x=extTADA_qvalue, y=xTADA_qvalue, col=mut.Rank, label = Gene)) +
-  geom_point(size=0.2) +
-  geom_vline(xintercept=c(threshold_1), col="red", alpha=0.5, linetype='dotdash') +
-  geom_hline(yintercept=c(threshold_2), col="red", alpha=0.5, linetype='dotdash') + 
-  theme_light() + ggtitle("Comparison of extTADA and xTADA q-values") +
-  scale_color_gradient2(midpoint=0.5, low="blue", mid="white", high="red", space ="Lab" ) +
-  ggeasy::easy_center_title()
-ggsave(plot = p4, filename = paste0(result.folder, 'fig.', samplesize, '/c.', C, '.size.', samplesize, '.simulation.mutRank.pdf'),
-       width = 5, height = 4)
 
 get_FDR_curve <- function(true_labels, qvalue) {
   FDR.points <- 10000
@@ -167,7 +122,7 @@ FDR_curve <- data.frame(qvalue=c(FDR_curve_1$qvalue, FDR_curve_2$qvalue, FDR_cur
                         model=c(rep('xTADA', dim(FDR_curve_1)[1]),
                                 rep('extTADA', dim(FDR_curve_1)[1]),
                                 rep('Poisson', dim(FDR_curve_1)[1])))
-
+library(ggplot2)
 p <- ggplot(FDR_curve, aes(x=qvalue, y=FDR, col=model)) +
   # geom_point() +
   geom_abline(intercept = 0, col="red", alpha=0.5, linetype='dotdash') +
@@ -201,18 +156,6 @@ FDR_local_curve <- data.frame(qvalue=c(FDR_local_curve_1$qvalue, FDR_local_curve
                                 rep('extTADA', dim(FDR_local_curve_1)[1]),
                                 rep('Poisson', dim(FDR_local_curve_1)[1])))
 
-p <- ggplot(FDR_local_curve, aes(x=qvalue, y=FDR, col=model)) +
-  # geom_point() +
-  geom_abline(intercept = 0, col="red", alpha=0.5, linetype='dotdash') +
-  # geom_line() +
-  geom_smooth() +
-  xlim(0, 0.1) +
-  # ylim(0, 0.11) +
-  scale_y_continuous(breaks = seq(0, 0.125, by = 0.025), limits = c(0, 0.11)) +
-  theme_light()
-# geom_text_repel(size=2.5, colour='black')
-ggsave(plot = p, filename = paste0(result.folder, 'fig.', samplesize, '/c.', C, '.size.', samplesize, '.compare.PP.FDR.local.small.pdf'),
-       width = 5, height = 4)
 p <- ggplot(FDR_local_curve[FDR_local_curve$model!="Poisson",], aes(x=qvalue, y=FDR, col=model)) +
   # geom_point() +
   # geom_abline(intercept = 0, col="red", alpha=0.5, linetype='dotdash') +
@@ -226,55 +169,4 @@ p <- ggplot(FDR_local_curve[FDR_local_curve$model!="Poisson",], aes(x=qvalue, y=
 # geom_text_repel(size=2.5, colour='black')
 ggsave(plot = p, filename = paste0(result.folder, 'fig.', samplesize, '/c.', C, '.size.', samplesize, '.compare.PP.FDR.local.pdf'),
        width = 5, height = 4)
-
-
-# precision recall
-table <- table[order(table$xTADA_qvalue), ]
-all.true <- sum(table$true)
-xTADA.pc <- data.frame(qvalue=table$xTADA_qvalue,
-                       true=table$true,
-                       precision=table$true,
-                       recall=table$true)
-xTADA.pc <- xTADA.pc[1:floor(1/6*dim(xTADA.pc)[1]), ]
-table <- table[order(table$extTADA_qvalue), ]
-extTADA.pc <- data.frame(qvalue=table$extTADA_qvalue,
-                       true=table$true,
-                       precision=table$true,
-                       recall=table$true)
-extTADA.pc <- extTADA.pc[1:floor(1/6*dim(extTADA.pc)[1]), ]
-table <- table[order(table$poisson_pvalue), ]
-poisson.pc <- data.frame(pvalue=table$poisson_pvalue,
-                         true=table$true,
-                         precision=table$true,
-                         recall=table$true)
-poisson.pc <- poisson.pc[1:floor(1/6*dim(poisson.pc)[1]), ]
-for (i in 1:dim(xTADA.pc)[1]) {
-  xTADA.pc$precision[i] <- sum(xTADA.pc$true[1:i])/i
-  xTADA.pc$recall[i] <- sum(xTADA.pc$true[1:i])/all.true
-  extTADA.pc$precision[i] <- sum(extTADA.pc$true[1:i])/i
-  extTADA.pc$recall[i] <- sum(extTADA.pc$true[1:i])/all.true
-  poisson.pc$precision[i] <- sum(poisson.pc$true[1:i])/i
-  poisson.pc$recall[i] <- sum(poisson.pc$true[1:i])/all.true
-}
-# for (i in 1:dim(extTADA.pc)[1]) {
-#   extTADA.pc$precision[i] <- sum(extTADA.pc$true[1:i])/i
-#   extTADA.pc$recall[i] <- sum(extTADA.pc$true[1:i])/all.true
-# }
-# for (i in 1:dim(poisson.pc)[1]) {
-#   poisson.pc$precision[i] <- sum(poisson.pc$true[1:i])/i
-#   poisson.pc$recall[i] <- sum(poisson.pc$true[1:i])/all.true
-# }
-to.plot <- data.frame(precision=c(xTADA.pc$precision, extTADA.pc$precision, poisson.pc$precision),
-                      recall=c(xTADA.pc$recall, extTADA.pc$recall, poisson.pc$recall),
-                      model=c(rep('xTADA', dim(xTADA.pc)[1]), 
-                              rep('extTADA', dim(extTADA.pc)[1]),
-                              rep('poisson', dim(poisson.pc)[1])))
-p<-ggplot(to.plot, aes(x=recall,y=precision,col=model)) +
-  geom_line(alpha=0.4) +
-  xlim(0, 1) +
-  ylim(0, 1) +
-  theme_light()
-ggsave(plot = p, filename = paste0(result.folder, 'fig.', samplesize, '/c.', C, '.size.', samplesize, '.precision.recall.pdf'),
-       width = 5, height = 4)
-
 

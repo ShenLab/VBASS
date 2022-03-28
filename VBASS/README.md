@@ -6,7 +6,7 @@
   
   `conda env create -f MLenv.yml`
   
-  `conda activate MLenv.yml`
+  `conda activate MLenv`
 
 ## Usage:
 
@@ -24,7 +24,7 @@
   
   `y_logits.csv`, the second column is the estimated π in log scale.
   
-  `log_BFs.csv`, the bayes factor, or log ratio of posterior probability of alternative hypothesis over null hypothesis in log scale.
+  `log_BFs.csv`, the Bayes factor, or log ratio of posterior probability of alternative hypothesis over null hypothesis in log scale.
   
   `reconstruction_vars.csv`, estimated effect sizes variance.
   

@@ -2,7 +2,7 @@ xTADA_result <- readRDS('result/CHD_xTADA_expression.RDS')
 source('xTADA/draw.xTADA.S_distribution.R')
 draw.xTADA.S_distribution.from.pars0(xTADA_result$pars0, savefilename = "figs/fig.5.A.pdf")
 
-dnv_table <- read.csv('result/xTADA.table.csv')
+dnv_table <- read.csv('result/table.S3.csv')
 threshold_1 <- 0.1
 threshold_2 <- 0.1
 dnv_table$group[dnv_table$qvalue<=threshold_1 & dnv_table$extTADA.qvalue<=threshold_2] = 'both'

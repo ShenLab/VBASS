@@ -14,9 +14,17 @@ x-TADA is a new model to integrate functional genomics data in identifying de no
 
 ## Environment:
   
+  Install Following packages:
+  
   `R>=3.6.0`
   
   `packages: stan, dplyr`
+  
+  Or use the conda environment we provided:
+  
+  `conda env create -f rstan.yml`
+  
+  `conda activate rstan`
 
 ## Usage:
 
@@ -44,11 +52,11 @@ x-TADA is a new model to integrate functional genomics data in identifying de no
       
 ## Figures in paper
   
-  Run `CHD_xTADA_Jinetal.R`.
+  Run `CHD_xTADA_Jinetal.R`. Or you can skip this step and use the results stored in the `result/` folder.
   
-  Run `simulation.xTADA.R <seed>`. Run 100 times with `<seed>` from 1-100.
+  Run `simulation.xTADA.R <seed>`. Run 100 times with `<seed>` from 1-100. Or you can skip this step and use the results stored in the `RDS.files/` folder.
   
-  Run `simulation.extTADA.R <seed>`. Run 100 times with `<seed>` from 1-100.
+  Run `simulation.extTADA.R <seed>`. Run 100 times with `<seed>` from 1-100. Or you can skip this step and use the results stored in the `RDS.files/` folder.
   
   Run `fig.*.R` files.
   
