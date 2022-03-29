@@ -35,21 +35,46 @@ train.genes <- rownames(train.input.label)[!is.na(train.input.label$label)]
 reference.dnv.table <- reference.dnv.table[!reference.dnv.table$GeneID %in% train.genes,]
 
 log_BFs <- read.csv(paste0(result.folder, 'log_BFs.csv'), row.names = 1)
-
+Bayesian.FDR.fromBF <- function(log_BF, alpha=0.05) {
+  # convert BFs to PPA (posterior probability of alternative model)
+  #pi <- 1-pi0
+  #q <- apply(pi*BF, 1, prod)/(apply(t(1 - pi), 1, prod)+apply(pi*BF, 1, prod)) # PPA
+  q0 <- 1/(exp(log_BF) + 1) # posterior probability of null model
+  
+  # the FDR at each PPA cutoff
+  n <- length(log_BF)
+  FDR <- numeric(n)
+  for (i in 1:n) FDR[i] <- sum(q0[1:i]) / i 
+  
+  # the cutoff
+  t <- 1
+  while (t <= length(q0) & mean(q0[1:t]) <= alpha) { t <- t+1 }
+  return (list(FDR=FDR, ND=t))
+}
 log_BFs$PPA <- 1/(exp(-log_BFs$X0)+1)
+log_BF_reordered <- log_BFs[order(log_BFs$PPA, decreasing = T),]
+log_BF_reordered$qvalue <- Bayesian.FDR.fromBF(log_BFs$X0)
+log_BFs$qvalue <- log_BF_reordered$qvalue[match(rownames(log_BFs), rownames(log_BF_reordered))]
 
 genes.to.check.scores <- list()
-extTADA.PP <- readRDS('data//SPARK_extTADA.WES1.discovery.RDS')
-extTADA.PP <- extTADA.PP$dataFDR
+extTADA.PP <- readRDS('data/SPARK_extTADA.WES1.discovery.RDS')
+extTADA.PP <- extTADA.PP$dataFDR.full.posterior
 dn.num <- extTADA.PP$dn_Dmis+extTADA.PP$dn_LGD
 mut.num <- extTADA.PP$mut_LGD+extTADA.PP$mut_Dmis
 poisson.res <- ppois(dn.num-1, mut.num*2*8308)
 
+# genes.to.check.scores.value <- data.frame(row.names = row.names(reference.dnv.table),
+#                                           VBASS.qvalue = log_BFs$qvalue[match(rownames(reference.dnv.table),
+#                                                                   rownames(log_BFs))],
+#                                           extTADA.qvalue = extTADA.PP$qvalue[match(rownames(reference.dnv.table),
+#                                                                             extTADA.PP$HGNC)],
+#                                           poisson.PP = poisson.res[match(rownames(reference.dnv.table),
+#                                                                          extTADA.PP$HGNC)])
 genes.to.check.scores.value <- data.frame(row.names = row.names(reference.dnv.table),
-                                          PPA = log_BFs$PPA[match(rownames(reference.dnv.table),
-                                                                  rownames(log_BFs))],
+                                          VBASS.PPA = log_BFs$PPA[match(rownames(reference.dnv.table),
+                                                                              rownames(log_BFs))],
                                           extTADA.PPA = extTADA.PP$PP[match(rownames(reference.dnv.table),
-                                                                            extTADA.PP$HGNC)],
+                                                                                   extTADA.PP$HGNC)],
                                           poisson.PP = poisson.res[match(rownames(reference.dnv.table),
                                                                          extTADA.PP$HGNC)])
 
