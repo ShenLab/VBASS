@@ -130,8 +130,8 @@ transformed parameters {
 
 ########################################
 #######De novo only
-DNextTADA <- readChar(paste0("~/extTADA/model/", "/extTADA.stan"),
-                      file.info(paste0("~/extTADA/model/", "/extTADA.stan"))$size)
+DNextTADA <- readChar(paste0("extTADA/model/", "/extTADA.stan"),
+                      file.info(paste0("extTADA/model/", "/extTADA.stan"))$size)
 
 
 ################CC model

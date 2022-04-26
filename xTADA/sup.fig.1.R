@@ -116,18 +116,18 @@ table <- table[order(table$poisson_pvalue), ]
 FDR_local_curve_3 <- get_local_FDR_curve(table$True_Label, 
                                          1-table$poisson_pvalue)
 
-FDR_curve <- data.frame(qvalue=c(FDR_curve_1$qvalue, FDR_curve_2$qvalue, FDR_curve_3$qvalue),
-                        FDR=c(FDR_curve_1$FDR, FDR_curve_2$FDR, FDR_curve_3$FDR),
+FDR_curve <- data.frame(FDR=c(FDR_curve_1$qvalue, FDR_curve_2$qvalue, FDR_curve_3$qvalue),
+                        real.FDR=c(FDR_curve_1$FDR, FDR_curve_2$FDR, FDR_curve_3$FDR),
                         num_points=c(FDR_curve_1$num_points, FDR_curve_2$num_points, FDR_curve_3$num_points),
                         model=c(rep('xTADA', dim(FDR_curve_1)[1]),
                                 rep('extTADA', dim(FDR_curve_1)[1]),
                                 rep('Poisson', dim(FDR_curve_1)[1])))
 library(ggplot2)
-p <- ggplot(FDR_curve, aes(x=qvalue, y=FDR, col=model)) +
+p <- ggplot(FDR_curve, aes(x=FDR, y=real.FDR, col=model)) +
   # geom_point() +
   geom_abline(intercept = 0, col="red", alpha=0.5, linetype='dotdash') +
-  # geom_line() +
-  geom_smooth() +
+  geom_line() +
+  # geom_smooth() +
   xlim(0, 0.1) +
   # ylim(0, 0.11) +
   scale_y_continuous(breaks = seq(0, 0.125, by = 0.025), limits = c(0, 0.11)) +
@@ -135,7 +135,7 @@ p <- ggplot(FDR_curve, aes(x=qvalue, y=FDR, col=model)) +
 # geom_text_repel(size=2.5, colour='black')
 ggsave(plot = p, filename = paste0(result.folder, 'fig.', samplesize, '/c.', C, '.size.', samplesize, '.compare.qvalue.FDR.small.pdf'),
        width = 5, height = 4)
-p <- ggplot(FDR_curve, aes(x=qvalue, y=FDR, col=model)) +
+p <- ggplot(FDR_curve, aes(x=FDR, y=real.FDR, col=model)) +
   # geom_point() +
   geom_abline(intercept = 0, col="red", alpha=0.5, linetype='dotdash') +
   geom_line() +
@@ -149,14 +149,14 @@ ggsave(plot = p, filename = paste0(result.folder, 'fig.', samplesize, '/c.', C, 
        width = 5, height = 4)
 
 # local FDR
-FDR_local_curve <- data.frame(qvalue=c(FDR_local_curve_1$qvalue, FDR_local_curve_2$qvalue, FDR_local_curve_3$qvalue),
-                        FDR=c(FDR_local_curve_1$FDR, FDR_local_curve_2$FDR, FDR_local_curve_3$FDR),
+FDR_local_curve <- data.frame(FDR=c(FDR_local_curve_1$qvalue, FDR_local_curve_2$qvalue, FDR_local_curve_3$qvalue),
+                        real.FDR=c(FDR_local_curve_1$FDR, FDR_local_curve_2$FDR, FDR_local_curve_3$FDR),
                         num_points=c(FDR_local_curve_1$num_points, FDR_local_curve_2$num_points, FDR_local_curve_3$num_points),
                         model=c(rep('xTADA', dim(FDR_local_curve_1)[1]),
                                 rep('extTADA', dim(FDR_local_curve_1)[1]),
                                 rep('Poisson', dim(FDR_local_curve_1)[1])))
 
-p <- ggplot(FDR_local_curve[FDR_local_curve$model!="Poisson",], aes(x=qvalue, y=FDR, col=model)) +
+p <- ggplot(FDR_local_curve[FDR_local_curve$model!="Poisson",], aes(x=FDR, y=real.FDR, col=model)) +
   # geom_point() +
   # geom_abline(intercept = 0, col="red", alpha=0.5, linetype='dotdash') +
   geom_line() +

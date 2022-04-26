@@ -1,2 +1,6 @@
-VBASS/AutoEncoderTADA.input.simulation.realexp/input.x.csv
-VBASS/AutoEncoderTADA.input.simulation.realexp/input.x_var.csv
+VBASS/VBASS.simulation.with.RDS/input.x.csv
+VBASS/VBASS.simulation.with.RDS/input.x_var.csv
+VBASS/archive/
+VBASS/figs/archive/
+
+.Rproj.user
