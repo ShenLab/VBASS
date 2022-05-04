@@ -43,7 +43,7 @@ input.dnv.table <- cbind(train.input[,c('dn_LGD', 'dn_Dmis')],
 
 result.folder <- 'train.real/'
 
-A_risk <- readxl::read_excel('~/fetal_brain/genetics/A-risk/A-risk.xlsx')
+A_risk <- readxl::read_excel('data/A-risk.xlsx')
 log_BF <- read.csv(paste0(result.folder, 'log_BFs.csv'), row.names = 1)
 log_logits <- read.csv(paste0(result.folder, 'y_logits.csv'), row.names = 1)
 reconstruction_means <- read.csv(paste0(result.folder, 'reconstruction_means.csv'),
@@ -73,7 +73,9 @@ dnv_table <- dnv_table[order(dnv_table$log_BF, decreasing = T),]
 dnv_table$FDR <- Bayesian.FDR.fromBF(dnv_table$log_BF)$FDR
 dnv_table$PPA <- 1/(exp(-dnv_table$log_BF) + 1)
 
+# TADA.result <- readRDS('data/SPARK_extTADA.WES1.RDS')
 TADA.result <- readRDS('data/SPARK_extTADA.WES1.RDS')
+
 TADA_dnv_table <- TADA.result$dataFDR.full.posterior
 dnv_table$TADA.PPA <- TADA_dnv_table$PP[match(rownames(dnv_table),
                                               TADA_dnv_table$HGNC)]
@@ -95,11 +97,18 @@ dnv_table$TADA.FDR <- Bayesian.FDR.fromPP(dnv_table$TADA.PPA)$FDR
 # FDR of dnv_table
 dnv_table$group <- rep(NA, dim(dnv_table)[1])
 threshold_1 <- 0.05
-threshold_2 <- 0.05
-dnv_table$group[dnv_table$FDR<=threshold_1 & dnv_table$TADA.FDR<=threshold_2] = 'both'
-dnv_table$group[dnv_table$FDR>threshold_1 & dnv_table$TADA.FDR<=threshold_2] = 'TADA_only'
-dnv_table$group[dnv_table$FDR<=threshold_1 & dnv_table$TADA.FDR>threshold_2] = 'VBASS_only'
-dnv_table$group[dnv_table$FDR>threshold_1 & dnv_table$TADA.FDR>threshold_2] = 'NA'
+threshold_2 <- 0.1
+dnv_table$group[dnv_table$FDR<=threshold_2 & dnv_table$TADA.FDR<=threshold_2] = 'both'
+dnv_table$group[dnv_table$FDR>threshold_1 & dnv_table$TADA.FDR<=threshold_1] = 'FDR_0.05_extTADA_only'
+dnv_table$group[dnv_table$FDR<=threshold_1 & dnv_table$TADA.FDR>threshold_1] = 'FDR_0.05_VBASS_only'
+dnv_table$group[dnv_table$FDR>threshold_2 
+                & dnv_table$TADA.FDR<=threshold_2
+                & dnv_table$TADA.FDR>threshold_1] = 'FDR_0.1_extTADA_only'
+dnv_table$group[dnv_table$FDR<=threshold_2
+                & dnv_table$FDR>threshold_1
+                & dnv_table$TADA.FDR>threshold_2] = 'FDR_0.1_VBASS_only'
+
+dnv_table$group[dnv_table$FDR>threshold_2 & dnv_table$TADA.FDR>threshold_2] = 'NA'
 dnv_table$label <- rownames(dnv_table)
 dnv_table$label[dnv_table$group %in% c('NA', 'both')] <- ''
 write.csv(dnv_table, file = 'figs/table.S6.csv')
@@ -108,7 +117,9 @@ write.csv(dnv_table, file = 'figs/table.S6.csv')
 p <- ggplot(dnv_table, aes(x=FDR, y=TADA.FDR, col=group, label=label)) +
   geom_point() +
   geom_vline(xintercept=c(threshold_1), col="red", alpha=0.5, linetype='dotdash') +
-  geom_hline(yintercept=c(threshold_2), col="red", alpha=0.5, linetype='dotdash') + 
+  geom_hline(yintercept=c(threshold_1), col="red", alpha=0.5, linetype='dotdash') + 
+  geom_vline(xintercept=c(threshold_2), col="blue", alpha=0.5, linetype='dotdash') +
+  geom_hline(yintercept=c(threshold_2), col="blue", alpha=0.5, linetype='dotdash') + 
   theme_light() +
   xlim(0, 0.25) +
   ylim(0, 0.25) +
