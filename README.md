@@ -1,4 +1,4 @@
-## VBASS & x-TADA
+## VBASS & scalar_VBASS
 
   This is the repository for our manuscript "Integration of gene expression data in Bayesian association analysis of rare variants"
   

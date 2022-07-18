@@ -183,7 +183,7 @@ to.plot <- data.frame(precision=c(VBASS.pc$precision, extTADA.pc$precision, real
                       recall=c(VBASS.pc$recall, extTADA.pc$recall, real.pc$recall),
                       model=c(rep('VBASS', dim(VBASS.pc)[1]),
                               rep('extTADA', dim(extTADA.pc)[1]),
-                              rep('real', dim(real.pc)[1])))
+                              rep('real.parameters', dim(real.pc)[1])))
 p<-ggplot(to.plot, aes(x=recall,y=precision,col=model)) +
   geom_line() +
   xlim(0, 1) +
