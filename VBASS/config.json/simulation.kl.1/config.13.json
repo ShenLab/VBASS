@@ -1,0 +1,54 @@
+{
+  "train": {
+    "opt":"adam",
+    "batch_size":2048,
+    "seed":0,
+    "warmup": {
+      "learning_rate":1e-3,
+      "steps":50,
+      "likelihood_weight" : [0, 80],
+      "beta": 1,
+      "epsilon": 1
+    },
+    "decay": {
+      "initial_learning_rate": 1e-3,
+      "steps": 60,
+      "likelihood_weight" : [0, 80],
+      "max_decay_steps": 50,
+      "end_learning_rate":1e-4,
+      "beta": 1,
+      "epsilon": 1
+    }
+  },
+
+  "model": {
+    "model_type":"mix_model_v5",
+    "dropout_rate": 0.9,
+    "x_dim": [80, 2],
+    "x_in_dim": [80],
+    "x_out_dim": [80, 2],
+    "y_kl_learnable": false,
+    "gamma_kl_learnable": true,
+    "gamma_fixed": true,
+    "x_out_likelihood": ["Binomial", "Poisson"],
+    "x_out_mixture": [false, true],
+    "h_in_shared_dim": [32],
+    "h_in_z_dim": [],
+    "h_in_y_dim": [],
+    "z_dim": 8,
+    "y_dim" : 2,
+    "y_kl_param" : [1.90304, -1.90304],
+    "h_out_shared_dim" : [],
+    "h_out_dims" : [[32], [32]],
+    "batch_norm": [false, false],
+    "layer_norm": [true, true]
+  },
+
+  "input": {
+    "data_dir": "VBASS.simulation/dataset.13/"
+  },
+
+  "output": {
+    "model_dir": "train.simulation.out.kl.1/13.out/"
+  }
+}

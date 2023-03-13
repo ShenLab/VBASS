@@ -49,6 +49,6 @@
   },
 
   "output": {
-    "model_dir": "train.simulation.seed.7.split.47/"
+    "model_dir": "train.simulation.out/47.out/"
   }
 }

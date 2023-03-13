@@ -1,4 +1,5 @@
 library(ggrepel)
+library(ggplot2)
 Bayesian.FDR.fromBF <- function(log_BF, alpha=0.05) {
   # convert BFs to PPA (posterior probability of alternative model)
   #pi <- 1-pi0

@@ -138,9 +138,14 @@ p <- ggplot(FDR_curve, aes(x=FDR, y=real.FDR, col=model)) +
   # geom_point() +
   geom_abline(intercept = 0, col="red", alpha=0.5, linetype='dotdash') +
   # geom_line() +
-  geom_smooth() +
+  # geom_smooth() +
   xlim(0, 0.1) +
   # ylim(0, 0.11) +
+  stat_smooth(method = "lm", formula = y~x) +
+  stat_regline_equation(
+    aes(label =  paste(..eq.label.., ..adj.rr.label.., sep = "~~~~")),
+    formula = y~x
+  ) +
   scale_y_continuous(breaks = seq(0, 0.125, by = 0.025), limits = c(0, 0.11)) +
   theme_light()
 # geom_text_repel(size=2.5, colour='black')
