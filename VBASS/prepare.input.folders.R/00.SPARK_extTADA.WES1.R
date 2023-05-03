@@ -20,7 +20,6 @@ saveRDS(result, file = paste0("data/SPARK_extTADA.WES1.seed.", seed, ".RDS"))
 
 for (i in 0:9) {
   tmp <- (readRDS(paste0('data/SPARK_extTADA.WES1.seed.', i, '.RDS')))
-  # summary <- summary(tmp$mcmcDD)
-  # print(log(1/summary$summary[1,1]-1)/2)
+  # that will be the optimized KL parameter
   print(log(1/tmp$pars0[1,1]-1)/2)
 }

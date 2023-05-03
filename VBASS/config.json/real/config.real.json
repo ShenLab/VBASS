@@ -37,6 +37,7 @@
     "z_dim": 8,
     "y_dim" : 2,
     "y_kl_param" : [1.64016, -1.64016],
+    "gamma_alpha_kl_param": [16.61025718, 6.77746547],
     "h_out_shared_dim" : [],
     "h_out_dims" : [[32], [32]],
     "batch_norm": [false, false],

@@ -1,6 +1,7 @@
 summary.folder <- 'train.simulation.out/'
 
 library(ggrepel)
+library(ggpubr)
 Bayesian.FDR <- function(log_BF, alpha=0.05) {
   # convert BFs to PPA (posterior probability of alternative model)
   #pi <- 1-pi0
@@ -28,7 +29,10 @@ for (i in 1:50) {
   train.input.var <- read.csv(paste0('VBASS.simulation.with.RDS/input.x_var.',
                                      i, '.csv'),
                               row.names = 1)
-  
+  train.input.label <- read.csv(paste0('VBASS.simulation.with.RDS/input.label.',
+                                     i, '.csv'),
+                                row.names = 1)
+  train.genes <- rownames(train.input.label)[!is.na(train.input.label$label)]
   train.point.est <- train.input / train.input.var
   
   input.dnv.table <- cbind(train.input[,c('dn.cls1', 'dn.cls2')],
@@ -62,6 +66,8 @@ for (i in 1:50) {
                      real_BF=real_BF$real.log.BF[match(rownames(input.dnv.table), rownames(real_BF))],
                      reconstruction_means,
                      reconstruction_vars)
+  
+  dnv_table$in.train <- rownames(dnv_table) %in% train.genes
   
   dnv_table$mut.rate <- dplyr::percent_rank(dnv_table$mut.cls1 + dnv_table$mut.cls2)
   dnv_table$pi <- 1/(1+exp(-dnv_table$log_logits))
@@ -130,8 +136,7 @@ FDR_curve <- data.frame(FDR=c(FDR_curve_1$qvalue, FDR_curve_2$qvalue),
                         real.FDR=c(FDR_curve_1$FDR, FDR_curve_2$FDR),
                         num_points=c(FDR_curve_1$num_points, FDR_curve_2$num_points),
                         model=c(rep('VBASS', dim(FDR_curve_1)[1]),
-                                rep('extTADA', dim(FDR_curve_2)[1]))
-)
+                                rep('extTADA', dim(FDR_curve_2)[1])))
 
 # plot together
 p <- ggplot(FDR_curve, aes(x=FDR, y=real.FDR, col=model)) +
@@ -141,19 +146,21 @@ p <- ggplot(FDR_curve, aes(x=FDR, y=real.FDR, col=model)) +
   # geom_smooth() +
   xlim(0, 0.1) +
   # ylim(0, 0.11) +
-  stat_smooth(method = "lm", formula = y~x) +
-  stat_regline_equation(
-    aes(label =  paste(..eq.label.., ..adj.rr.label.., sep = "~~~~")),
-    formula = y~x
-  ) +
+  stat_smooth() +
+  # stat_regline_equation(
+  #   aes(label =  paste(..eq.label.., ..adj.rr.label.., sep = "~~~~")),
+  #   formula = y~x
+  # ) +
   scale_y_continuous(breaks = seq(0, 0.125, by = 0.025), limits = c(0, 0.11)) +
   theme_light()
 # geom_text_repel(size=2.5, colour='black')
 ggsave(plot = p, filename = paste0(result.folder, 'fig.3.A.pdf'),
        width = 5, height = 4)
 
-# precision recall
+# precision recall, remove files in training
+dnv_table <- dnv_table[!dnv_table$in.train, ]
 dnv_table <- dnv_table[order(dnv_table$qvalue), ]
+
 all.true <- sum(dnv_table$true)
 VBASS.pc <- data.frame(qvalue=dnv_table$qvalue,
                        true=dnv_table$true_labels,

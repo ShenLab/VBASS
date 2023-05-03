@@ -42,8 +42,8 @@ def run_one_epoch(counter, train_flag, dataloader, model, likelihood_weight,
             writer.add_scalar('Parameter/y_kl[1]', model.y_kl_param[1].item(), counter)
             writer.add_scalar('Parameter/gamma_alpha_kl_param[0]', model.gamma_alpha_kl_param[0].item(), counter)
             writer.add_scalar('Parameter/gamma_alpha_kl_param[1]', model.gamma_alpha_kl_param[1].item(), counter)
-            writer.add_scalar('Parameter/gamma_beta_kl_param[0]', model.gamma_beta_kl_param[0].item(), counter)
-            writer.add_scalar('Parameter/gamma_beta_kl_param[1]', model.gamma_beta_kl_param[1].item(), counter)
+            writer.add_scalar('Parameter/gamma_beta_kl_param[0]', model._get_gamma_beta_kl_param()[0].item(), counter)
+            writer.add_scalar('Parameter/gamma_beta_kl_param[1]', model._get_gamma_beta_kl_param()[1].item(), counter)
             for tag, value in model.named_parameters():
                 tag = tag.replace('.', '/')
                 writer.add_histogram('weights/'+tag, value.data.cpu().numpy(), counter)
@@ -133,6 +133,10 @@ def train_model(config):
         gamma_beta_kl_param=config['model']['gamma_beta_kl_param']
     except KeyError:
         gamma_beta_kl_param=None
+    try:
+        gamma_beta_based_on_alpha=config['model']['gamma_beta_based_on_alpha']
+    except KeyError:
+        gamma_beta_based_on_alpha=False
     model = model_name(x_in_dim=config['model']['x_in_dim'],
                        x_out_dim=config['model']['x_out_dim'],
                        x_out_likelihood=config['model']['x_out_likelihood'],
@@ -148,6 +152,7 @@ def train_model(config):
                        gamma_fixed=config['model']['gamma_fixed'],
                        gamma_alpha_kl_param=gamma_alpha_kl_param,
                        gamma_beta_kl_param=gamma_beta_kl_param,
+                       gamma_beta_based_on_alpha=gamma_beta_based_on_alpha,
                        h_out_shared_dim=config['model']['h_out_shared_dim'],
                        h_out_dims=config['model']['h_out_dims'],
                        batch_norm=config['model']['batch_norm'],

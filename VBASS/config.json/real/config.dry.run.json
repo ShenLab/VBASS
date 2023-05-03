@@ -1,0 +1,56 @@
+{
+  "train": {
+    "opt":"adam",
+    "batch_size":2048,
+    "warmup": {
+      "learning_rate":1e-3,
+      "steps":50,
+      "likelihood_weight" : [0, 82],
+      "beta": 1,
+      "epsilon": 1
+    },
+    "decay": {
+      "initial_learning_rate": 1e-3,
+      "steps": 60,
+      "likelihood_weight" : [0, 82],
+      "max_decay_steps": 50,
+      "end_learning_rate":1e-4,
+      "beta": 1,
+      "epsilon": 1
+    }
+  },
+
+  "model": {
+    "model_type":"mix_model_v5",
+    "dropout_rate": 0.9,
+    "x_dim": [80, 2],
+    "x_in_dim": [80],
+    "x_out_dim": [80, 2],
+    "y_kl_learnable": true,
+    "gamma_kl_learnable": true,
+    "gamma_fixed": true,
+    "x_out_likelihood": ["Binomial", "Poisson"],
+    "x_out_mixture": [false, true],
+    "h_in_shared_dim": [32],
+    "h_in_z_dim": [],
+    "h_in_y_dim": [],
+    "z_dim": 8,
+    "y_dim" : 2,
+    "y_kl_param" : [1.5, -1.5],
+    "gamma_alpha_kl_param": [17.0, 7.0],
+    "gamma_beta_based_on_alpha": true,
+    "gamma_beta_kl_param": [1.0, 1.0],
+    "h_out_shared_dim" : [],
+    "h_out_dims" : [[32], [32]],
+    "batch_norm": [false, false],
+    "layer_norm": [true, true]
+  },
+
+  "input": {
+    "data_dir": "VBASS.input.dry.run/"
+  },
+
+  "output": {
+    "model_dir": "train.real.dry.run/"
+  }
+}

@@ -1,235 +1,130 @@
-kl <- c(1.0, 0.6, 0.8, 1.2, 1.4, 2.0, 3.0)
+library(patchwork)
+# Using all genes PCA, use K-means to cluster genes
+sc.input <- read.csv('VBASS.input/input.x.csv', row.names = 1)
+sc.input <- sc.input[,1:80]
+sc.number <- read.csv('VBASS.input/input.x_var.csv', row.names = 1)
+sc.number <- sc.number[,1:80]
+sc.input <- sc.input / sc.number
 
-library(ggrepel)
-library(ggpubr)
-Bayesian.FDR <- function(log_BF, alpha=0.05) {
-  # convert BFs to PPA (posterior probability of alternative model)
-  #pi <- 1-pi0
-  #q <- apply(pi*BF, 1, prod)/(apply(t(1 - pi), 1, prod)+apply(pi*BF, 1, prod)) # PPA
-  q0 <- 1/(exp(log_BF) + 1) # posterior probability of null model
-  
-  # the FDR at each PPA cutoff
-  n <- length(log_BF)
-  FDR <- numeric(n)
-  for (i in 1:n) FDR[i] <- sum(q0[1:i]) / i 
-  
-  # the cutoff
-  t <- 1
-  while (t <= length(q0) & mean(q0[1:t]) <= alpha) { t <- t+1 }
-  return (list(FDR=FDR, ND=t))
-}
-FDR.curves <- list()
-PR.curves <- list()
-# model result
-# args = commandArgs(trailingOnly=TRUE)
-for (k in 1:7) {
-  summary.folder <- paste0('train.simulation.out.kl.', k-1, '/')
-  all_dnv_table <- c()
-  for (i in 1:50) {
-    train.input <- read.csv(paste0('VBASS.simulation.with.RDS/input.x.',
-                                   i, '.csv'),
-                            row.names = 1)
-    train.input.var <- read.csv(paste0('VBASS.simulation.with.RDS/input.x_var.',
-                                       i, '.csv'),
-                                row.names = 1)
-    
-    train.point.est <- train.input / train.input.var
-    
-    input.dnv.table <- cbind(train.input[,c('dn.cls1', 'dn.cls2')],
-                             train.input.var[,c('mut.cls1', 'mut.cls2')])
-    
-    result.folder <- paste0(summary.folder, i, '.out/')
-    
-    # epoch_number <- args[2]
-    # A_risk <- readxl::read_excel('~/fetal_brain/genetics/A-risk/A-risk.xlsx')
-    
-    log_BF <- read.csv(paste0(result.folder, 'log_BFs.csv'), row.names = 1)
-    log_logits <- read.csv(paste0(result.folder, 'y_logits.csv'), row.names = 1)
-    reconstruction_means <- read.csv(paste0(result.folder, 'reconstruction_means.csv'), row.names = 1)
-    reconstruction_vars <- read.csv(paste0(result.folder, 'reconstruction_vars.csv'), row.names = 1)
-    
-    log_logits$log_logits <- log_logits$X1 - log_logits$X0
-    reconstruction_means <- reconstruction_means[match(rownames(reconstruction_means),
-                                                       rownames(input.dnv.table)),]
-    colnames(reconstruction_means) <- c("LGD_mean", "Dmis_mean")
-    reconstruction_vars <- reconstruction_vars[match(rownames(reconstruction_vars),
-                                                     rownames(input.dnv.table)),]
-    colnames(reconstruction_vars) <- c("LGD_var", "Dmis_var")
-    
-    real_BF <- read.csv(paste0('VBASS.simulation.with.RDS/real.log.BF.',
-                               i, '.csv'),
-                        row.names = 1)
-    
-    dnv_table <- cbind(input.dnv.table,
-                       log_BF=log_BF[match(rownames(input.dnv.table), rownames(log_BF)),],
-                       log_logits=log_logits$log_logits[match(rownames(input.dnv.table), rownames(log_logits))],
-                       real_BF=real_BF$real.log.BF[match(rownames(input.dnv.table), rownames(real_BF))],
-                       reconstruction_means,
-                       reconstruction_vars)
-    
-    dnv_table$mut.rate <- dplyr::percent_rank(dnv_table$mut.cls1 + dnv_table$mut.cls2)
-    dnv_table$pi <- 1/(1+exp(-dnv_table$log_logits))
-    
-    dnv_table <- dnv_table[order(dnv_table$log_BF, decreasing = T),]
-    dnv_table$qvalue <- Bayesian.FDR(dnv_table$log_BF)$FDR
-    dnv_table$PPA <- 1/(exp(dnv_table$log_BF) + 1)
-    
-    dnv_table <- dnv_table[order(dnv_table$real_BF, decreasing = T),]
-    dnv_table$real.qvalue <- Bayesian.FDR(dnv_table$real_BF)$FDR
-    dnv_table$real.PPA <- 1/(exp(dnv_table$real_BF) + 1)
-    
-    TADA.result <- readRDS(paste0('VBASS.simulation.with.RDS/extTADA.simulation.realexp.',
-                                  i, '.RDS'))
-    TADA_dnv_table <- TADA.result$dataFDR.full.posterior
-    dnv_table$TADA_qvalue <- TADA_dnv_table$qvalue[match(rownames(dnv_table),
-                                                         TADA_dnv_table$Gene)]
-    # PPA of dnv_table
-    true_labels <- read.csv(paste0('VBASS.simulation.with.RDS/test.label.',
-                                   i, '.csv'))
-    training_true_labels <- read.csv(paste0('VBASS.simulation.with.RDS/input.label.',
-                                            i, '.csv'))
-    
-    dnv_table$group <- rep(NA, dim(dnv_table)[1])
-    dnv_table$true_labels <- true_labels$label[match(rownames(dnv_table), true_labels$X)]
-    dnv_table$training_labels <- training_true_labels$label[match(rownames(dnv_table), training_true_labels$X)]
-    
-    dnv_table$group[dnv_table$true_labels == 1 & !is.na(dnv_table$training_labels)] = 'TP: training'
-    dnv_table$group[dnv_table$true_labels == 0 & !is.na(dnv_table$training_labels)] = 'TN: training'
-    dnv_table$group[dnv_table$true_labels == 1 & is.na(dnv_table$training_labels)] = 'TP'
-    dnv_table$group[dnv_table$true_labels == 0 & is.na(dnv_table$training_labels)] = 'TN'
-    
-    all_dnv_table <- rbind(all_dnv_table, dnv_table)
-  }
-  result.folder <- paste0('figs/')
-  dir.create(result.folder)
-  
-  dnv_table <- all_dnv_table
-  
-  # check the true FDR vs FDR
-  dnv_table.ranked <- dnv_table[order(dnv_table$qvalue), ]
-  get_FDR_curve <- function(true_labels, qvalue) {
-    FDR.points <- 10000
-    FDR_AutoEncoder <- data.frame(FDR=rep(NA, FDR.points+1),
-                                  qvalue=seq(0, FDR.points)/FDR.points,
-                                  num_points=rep(NA, FDR.points+1))
-    for (i in 1:(FDR.points+1)) {
-      all_points <- sum(qvalue<=FDR_AutoEncoder$qvalue[i])
-      false_points <- all_points - sum(true_labels[qvalue<=FDR_AutoEncoder$qvalue[i]])
-      if (all_points==0) {
-        FDR_AutoEncoder$FDR[i] <- 0
-      } else {
-        FDR_AutoEncoder$FDR[i] <- false_points / all_points
-      }
-      FDR_AutoEncoder$num_points[i] <- all_points
-    }
-    FDR_AutoEncoder
-  }
-  FDR_curve_1 <- get_FDR_curve(dnv_table.ranked$true_labels, 
-                               dnv_table.ranked$qvalue)
-  FDR_curve_1$model <- 'VBASS'
-  dnv_table.ranked <- dnv_table[order(dnv_table$TADA_qvalue), ]
-  FDR_curve_2 <- get_FDR_curve(dnv_table.ranked$true_labels,
-                               dnv_table.ranked$TADA_qvalue)
-  FDR_curve <- data.frame(FDR=c(FDR_curve_1$qvalue, FDR_curve_2$qvalue),
-                          real.FDR=c(FDR_curve_1$FDR, FDR_curve_2$FDR),
-                          num_points=c(FDR_curve_1$num_points, FDR_curve_2$num_points),
-                          model=c(rep('VBASS', dim(FDR_curve_1)[1]),
-                                  rep('extTADA', dim(FDR_curve_2)[1]))
-  )
-  FDR.curves[[k]] <- FDR_curve
-  
-  # plot together
-  p <- ggplot(FDR_curve, aes(x=FDR, y=real.FDR, col=model)) +
-    # geom_point() +
-    geom_abline(intercept = 0, col="red", alpha=0.5, linetype='dotdash') +
-    # geom_line() +
-    # geom_smooth() +
-    xlim(0, 0.1) +
-    # ylim(0, 0.11) +
-    stat_smooth(method = "lm", formula = y~x) +
-    stat_regline_equation(
-      aes(label =  paste(..eq.label.., ..adj.rr.label.., sep = "~~~~")),
-      formula = y~x
-    ) +
-    scale_y_continuous(breaks = seq(0, 0.125, by = 0.025), limits = c(0, 0.11)) +
-    theme_light()
-  # geom_text_repel(size=2.5, colour='black')
-  # ggsave(plot = p, filename = paste0(result.folder, 'sup.fig.5.A.kl.', kl[k], '.pdf'),
-  #        width = 5, height = 4)
-  
-  # precision recall
-  dnv_table <- dnv_table[order(dnv_table$qvalue), ]
-  all.true <- sum(dnv_table$true)
-  VBASS.pc <- data.frame(qvalue=dnv_table$qvalue,
-                         true=dnv_table$true_labels,
-                         precision=dnv_table$true_labels,
-                         recall=dnv_table$true_labels)
-  VBASS.pc <- VBASS.pc[VBASS.pc$qvalue <= 0.5, ]
-  dnv_table <- dnv_table[order(dnv_table$TADA_qvalue), ]
-  extTADA.pc <- data.frame(qvalue=dnv_table$TADA_qvalue,
-                           true=dnv_table$true_labels,
-                           precision=dnv_table$true_labels,
-                           recall=dnv_table$true_labels)
-  extTADA.pc <- extTADA.pc[extTADA.pc$qvalue <= 0.5, ]
-  dnv_table <- dnv_table[order(dnv_table$real.qvalue), ]
-  real.pc <- data.frame(qvalue=dnv_table$real.qvalue,
-                        true=dnv_table$true_labels,
-                        precision=dnv_table$true_labels,
-                        recall=dnv_table$true_labels)
-  real.pc <- real.pc[real.pc$qvalue <= 0.5, ]
-  for (i in 1:dim(VBASS.pc)[1]) {
-    VBASS.pc$precision[i] <- sum(VBASS.pc$true[1:i])/i
-    VBASS.pc$recall[i] <- sum(VBASS.pc$true[1:i])/all.true
-  }
-  for (i in 1:dim(extTADA.pc)[1]) {
-    extTADA.pc$precision[i] <- sum(extTADA.pc$true[1:i])/i
-    extTADA.pc$recall[i] <- sum(extTADA.pc$true[1:i])/all.true
-  }
-  for (i in 1:dim(real.pc)[1]) {
-    real.pc$precision[i] <- sum(real.pc$true[1:i])/i
-    real.pc$recall[i] <- sum(real.pc$true[1:i])/all.true
-  }
-  to.plot <- data.frame(precision=c(VBASS.pc$precision, extTADA.pc$precision, real.pc$precision),
-                        recall=c(VBASS.pc$recall, extTADA.pc$recall, real.pc$recall),
-                        model=c(rep('VBASS', dim(VBASS.pc)[1]),
-                                rep('extTADA', dim(extTADA.pc)[1]),
-                                rep('real.parameters', dim(real.pc)[1])))
-  PR.curves[[k]] <- to.plot
-  p<-ggplot(to.plot, aes(x=recall,y=precision,col=model)) +
-    geom_line() +
-    xlim(0, 1) +
-    ylim(0, 1) +
-    theme_light()
-  # ggsave(plot = p, filename = paste0(result.folder, 'sup.fig.5.B.kl.', kl[k], '.pdf'),
-  #        width = 5, height = 4)
-}
+gene.labels <- read.csv('VBASS.input/input.label.csv', row.names = 1)
+
+pi <- read.csv('train.real/y_logits.csv', row.names = 1)
+# training.genes.sc <- sc.input[!is.na(gene.labels$label),]
+# 
+# training.genes.sc.pca <- summary(prcomp(training.genes.sc, scale. = F))
+
+# all.genes.pca <- (as.matrix(sc.input) - matrix(1, nrow = dim(sc.input)[1], ncol = 1) 
+#                   %*% training.genes.sc.pca$center) %*% training.genes.sc.pca$rotation
+# sum(all.genes.pca[!is.na(gene.labels$label),] - training.genes.sc.pca$x)
+
+all.genes.pca <- summary(prcomp(sc.input, scale. = F))$x
+
+library(Seurat)
+fake_sc <- CreateSeuratObject(t(sc.input))
+fake_sc <- FindVariableFeatures(fake_sc)
+fake_sc <- ScaleData(fake_sc)
+fake_sc <- RunPCA(fake_sc)
+fake_sc <- FindNeighbors(fake_sc)
+fake_sc <- FindClusters(fake_sc, resolution = 0.1)
+
+i = 2
+
+all.genes.pca.df <- data.frame(all.genes.pca[,i:i+1])
+all.genes.pca.df$louvain_clust <- fake_sc@meta.data$seurat_clusters
 
 
-kl <- c(1.0, 0.6, 0.8, 1.2, 1.4, 2.0, 3.0)
-to.plot.FDR <- data.frame()
-to.plot.PR <- data.frame()
-for (k in 1:7) {
-  tmp <- FDR.curves[[k]]
-  tmp$kl.ratio <- as.character(kl[k])
-  to.plot.FDR <- dplyr::bind_rows(to.plot.FDR, tmp)
-  tmp <- PR.curves[[k]]
-  tmp$kl.ratio <- as.character(kl[k])
-  to.plot.PR <- dplyr::bind_rows(to.plot.PR, tmp)
+# do a k-means clustering
+wss <- function(k) {
+  kmeans(all.genes.pca[,i:i+1], k, nstart = 50, iter.max = 100)$tot.withinss
 }
-write.csv(to.plot.FDR, 'figs/sup.fig.5.kls.FDR.csv')
-write.csv(to.plot.PR, 'figs/sup.fig.5.kls.PR.csv')
-p <- ggplot(to.plot.FDR[to.plot.FDR$model=="VBASS",], aes(x=FDR, y=real.FDR, col=as.character(kl.ratio))) +
-  # geom_smooth() +
-  stat_smooth(method = "lm", formula = y~x) +
-  stat_regline_equation(
-    aes(label =  paste(..eq.label.., ..adj.rr.label.., sep = "~~~~")),
-    formula = y~x
-  ) +
-  geom_abline(intercept = 0, col="red", alpha=0.5, linetype='dotdash') +
-  xlim(0, 0.1) +
-  labs(col='kl / real.pi.mean') +
-  scale_y_continuous(breaks = seq(0, 0.125, by = 0.025), limits = c(0, 0.11)) +
-  theme_light()
-ggsave("figs/sup.fig.5.kls.pdf", plot = p, width = 6, height = 5)
+k.values <- 1:15
+wss_values <- purrr::map_dbl(k.values, wss)
+plot(k.values, wss_values,
+     type="b", pch = 19, frame = FALSE, 
+     xlab="Number of clusters K",
+     ylab="Total within-clusters sum of squares")
+
+result <- kmeans(all.genes.pca[,i:i+1], 3, nstart = 50, iter.max = 100)
+all.genes.pca.df$k_means_clust <- as.factor(result$cluster)
+
+
+pca.df <- data.frame(PC0 = all.genes.pca[,i-1],
+                     PC1=all.genes.pca[,i],
+                     PC2=all.genes.pca[,i+1],
+                     training.label=as.character(gene.labels$label),
+                     louvain.clust=all.genes.pca.df$louvain_clust,
+                     k.means.clust=all.genes.pca.df$k_means_clust,
+                     log_pi=pi$X1)
+pca.df$training.label[pca.df$training.label=="0"] <- "Non-Risk"
+pca.df$training.label[pca.df$training.label=="1"] <- "ASD-Risk"
+
+posterior <- readxl::read_excel('figs/Supplementary Table.xlsx', sheet='S6')
+colnames(posterior) <- posterior[14,]
+posterior <- posterior[15:dim(posterior)[1], ]
+pca.df$posterior.label <- posterior$group[match(rownames(pca.df), posterior$HGNC)]
+pca.df$posterior.label[pca.df$posterior.label=="NA"] <- NA
+
+p1 <- ggplot(pca.df, aes(x=PC1, y=PC2, col=k.means.clust)) +
+  geom_point(alpha=0.7, size=0.1) + xlab(paste0("PC ", i)) + ylab(paste0("PC ", i+1)) +
+  theme_bw()
+# p1 <- ggExtra::ggMarginal(p1, groupColour = T, type="density")
+# ggsave(paste0("review.figs/review.fig.5.k.means.clust.1.pdf"), plot = p1, width = 6, height = 5)
+
+pca.result <- prcomp(sc.input, scale. = F)
+summary.pca <- summary(pca.result)
+pca.loadings <- data.frame(Variables = row.names(pca.result$rotation),
+                           PC0 = pca.result$rotation[,i-1],
+                           PC1 = pca.result$rotation[,i],
+                           PC2 = pca.result$rotation[,i+1])
+arrow.length.1 <- max(abs(c(pca.df$PC0, pca.df$PC1))) / max(abs(c(pca.loadings$PC0, pca.loadings$PC1)))/2
+mid.point <- log(mean(exp(pca.df$log_pi)))
+p0.5 <- ggplot(data = pca.df, aes(x=PC0, y=PC1)) +
+  geom_point(alpha=0.5, size=1, stroke=0, col='grey') +
+  # xlim(-7.5, 2) + ylim(-3.5, 5) +
+  theme_bw() + 
+  xlab(paste("PC", i-1, ":", summary.pca$importance[2,i-1], sep = "")) + 
+  ylab(paste("PC", i, ":", summary.pca$importance[2,i], sep = "")) + 
+  scale_color_gradient2(low = "blue", mid = "white", high = "red", midpoint = mid.point) +
+  geom_segment(data = pca.loadings, aes(x = 0, y = 0, xend = (PC0*arrow.length.1),
+                                        yend = (PC1*arrow.length.1)), arrow = arrow(length = unit(1/2, "picas")),
+               color = "red", alpha = 0.3) +
+  geom_text_repel(data = pca.loadings, 
+                  aes(x = (PC0*arrow.length.1), y = (PC1*arrow.length.1), label = Variables),
+                  max.overlaps = 70,
+                  size = 0.8)
+arrow.length <- max(abs(c(pca.df$PC1, pca.df$PC2))) / max(abs(c(pca.loadings$PC1, pca.loadings$PC2)))/2
+mid.point <- log(mean(exp(pca.df$log_pi)))
+p1 <- ggplot(data = pca.df, aes(x=PC1, y=PC2)) +
+  geom_point(alpha=0.5, size=1, stroke=0, col='grey') +
+  # xlim(-7.5, 2) + ylim(-3.5, 5) +
+  theme_bw() + 
+  xlab(paste("PC", i, ":", summary.pca$importance[2,i], sep = "")) + 
+  ylab(paste("PC", i+1, ":", summary.pca$importance[2,i+1], sep = "")) + 
+  scale_color_gradient2(low = "blue", mid = "white", high = "red", midpoint = mid.point) +
+  geom_segment(data = pca.loadings, aes(x = 0, y = 0, xend = (PC1*arrow.length),
+                                        yend = (PC2*arrow.length)), arrow = arrow(length = unit(1/2, "picas")),
+               color = "red", alpha = 0.3) +
+  geom_text_repel(data = pca.loadings, 
+                  aes(x = (PC1*arrow.length), y = (PC2*arrow.length), label = Variables),
+                  size = 0.8)
+ggsave(paste0("figs/sup.fig.5.B.pdf"), plot = p0.5 + p1, width = 6, height = 3)
+
+p1.5 <- ggplot(pca.df, aes(x=PC0, y=log_pi)) +
+  geom_point(alpha=0.7, size=0.1, col='light blue') + xlab(paste0("PC", i-1)) + ylab(paste0("log(pi)")) +
+  geom_smooth(fill='blue') +
+  theme_bw()
+p2 <- ggplot(pca.df, aes(x=PC1, y=log_pi)) +
+  geom_point(alpha=0.7, size=0.1, col='light blue') + xlab(paste0("PC", i)) + ylab(paste0("log(pi)")) +
+  geom_smooth() +
+  theme_bw()
+p3 <- ggplot(pca.df, aes(x=PC2, y=log_pi)) +
+  geom_point(alpha=0.7, size=0.1, col='light blue') + xlab(paste0("PC", i+1)) + ylab(paste0("log(pi)")) +
+  geom_smooth() +
+  theme_bw()
+# ggsave(paste0("review.figs/review.fig.5.pi.k.means.1.pdf"), plot = p2, width = 6, height = 3)
+p <- p1.5 + p2 + p3
+ggsave("figs/sup.fig.5.A.pdf", plot = p, width = 10, height = 3)
+
+
 
 

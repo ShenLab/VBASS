@@ -4,4 +4,12 @@ VBASS/archive/
 VBASS/figs/archive/
 scalar_VBASS_torch/
 scalar_VBASS/archive/
+VBASS/*.RDS
+VBASS/nohup.out/
+VBASS/train.simulation.out.kl.*/*.out/Debug/
+VBASS/train.simulation.out.kl.*/*.out/Log/
 .Rproj.user
+DECO/ASD.GO/*
+DECO/CHD.GO/*
+DECO/ASD.log
+DECO/CHD.log

@@ -160,13 +160,14 @@ class DataSet_v3(torch.utils.data.IterableDataset):
         if train_flag and warmup_flag:
             x_labeled_index = np.where(~np.isnan(label.iloc[:, 0].values))[0]
             x_unlabeled_index = np.where(np.isnan(label.iloc[:, 0].values))[0]
-            repeat_times = np.ceil(x_unlabeled_index.shape[0]/x_labeled_index.shape[0])
-            x_labeled_index = np.repeat(x_labeled_index, repeats=repeat_times)
-            x_index = np.concatenate((x_labeled_index, x_unlabeled_index))
-            x_in = x_in.iloc[x_index, :]
-            x_out = x_out.iloc[x_index, :]
-            x_var = x_var.iloc[x_index, :]
-            label = label.iloc[x_index, :]
+            if x_labeled_index.shape[0] > 0:
+                repeat_times = np.ceil(x_unlabeled_index.shape[0]/x_labeled_index.shape[0])
+                x_labeled_index = np.repeat(x_labeled_index, repeats=repeat_times)
+                x_index = np.concatenate((x_labeled_index, x_unlabeled_index))
+                x_in = x_in.iloc[x_index, :]
+                x_out = x_out.iloc[x_index, :]
+                x_var = x_var.iloc[x_index, :]
+                label = label.iloc[x_index, :]
         # shuffle x
         index = np.arange(x_in.shape[0])
         if train_flag:

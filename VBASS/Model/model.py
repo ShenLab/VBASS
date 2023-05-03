@@ -20,6 +20,7 @@ class DeepGenerativeMixModel(nn.Module):
                  gamma_kl_param_learnable: bool = True,
                  gamma_alpha_kl_param: List[float] = None,
                  gamma_beta_kl_param: List[float] = None,
+                 gamma_beta_based_on_alpha: bool = False,
                  gamma_fixed: bool = False,
                  h_out_shared_dim: List[int] = None,
                  h_out_dims: List[List[int]] = None,
@@ -139,11 +140,16 @@ class DeepGenerativeMixModel(nn.Module):
                                                           requires_grad=y_kl_param_learnable)
 
         self.gamma_fixed = gamma_fixed
+        self.gamma_beta_based_on_alpha = gamma_beta_based_on_alpha
 
         self.gamma_alpha_kl_param = torch.nn.Parameter(torch.tensor(gamma_alpha_kl_param),
                                                        requires_grad=gamma_kl_param_learnable)
-        self.gamma_beta_kl_param = torch.nn.Parameter(torch.tensor(gamma_beta_kl_param),
-                                                      requires_grad=gamma_kl_param_learnable)
+        if not self.gamma_beta_based_on_alpha:
+            self.gamma_beta_kl_param = torch.nn.Parameter(torch.tensor(gamma_beta_kl_param),
+                                                          requires_grad=gamma_kl_param_learnable)
+        else:
+            self.gamma_beta_kl_param = None
+            
 
         self.kl_z = None
         self.kl_y = None
@@ -161,6 +167,12 @@ class DeepGenerativeMixModel(nn.Module):
                                 self.y_kl_param.repeat(y_logits.shape[0], 1))
         return z, z_mu, z_sigma, y_logits
 
+    def _get_gamma_beta_kl_param(self):
+        if self.gamma_beta_based_on_alpha:
+            return torch.exp(6.7771073*self.gamma_alpha_kl_param**-1.7950864 - 0.2168248)
+        else:
+            return self.gamma_beta_kl_param
+
     def generative(self, z, y):
         # assume y is only single value that indicate the hypothesis.
         decoder_shared = self.shared_decoder(z)
@@ -168,7 +180,7 @@ class DeepGenerativeMixModel(nn.Module):
         for i in range(len(self.decoders)):
             if self.x_out_likelihood[i] == 'Poisson' and self.gamma_fixed:
                 x_mu.append((self.gamma_alpha_kl_param.repeat(decoder_shared.shape[0], 1),
-                             self.gamma_beta_kl_param.repeat(decoder_shared.shape[0], 1)))
+                             self._get_gamma_beta_kl_param().repeat(decoder_shared.shape[0], 1)))
             else:
                 if self.x_out_mixture[i]:
                     x_mu.append(self.decoders[i][y](decoder_shared))

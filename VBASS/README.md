@@ -12,7 +12,7 @@
 
   Prepare the desired input, see `prepare.input.folders.R/` for examples.
   
-  Prepare the running configs into a `.json` file, see `config.json/real/config.real.json` for examples.
+  Prepare the running configs into a `.json` file, see `config.json/real/config.real.json` for examples. Remeber to set the KL parameters according to the output of `00.SPARK_extTADA.WES1.R` in `prepare.input.folders.R/` folder.
   
   Run `python train_mix_model.py --config config.json` to train the model. It takes ~20 mins on a Nvidia A40 GPU.
   

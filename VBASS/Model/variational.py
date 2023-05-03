@@ -58,7 +58,7 @@ class LikelihoodMixModel(nn.Module):
                             ),
                             torch.distributions.Gamma(
                                 self.model.gamma_alpha_kl_param.repeat(reconstruction[i][0].shape[0], 1),
-                                self.model.gamma_beta_kl_param.repeat(reconstruction[i][1].shape[0], 1)
+                                self.model._get_gamma_beta_kl_param().repeat(reconstruction[i][1].shape[0], 1)
                             )
                         ).sum(dim=1, keepdims=True)
                     )

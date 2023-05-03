@@ -86,7 +86,7 @@ dnv_table$TADA.FDR <- TADA_dnv_table$qvalue[match(rownames(dnv_table),
 
 # supplementary table
 dnv_table$GeneID <- TADA_dnv_table$Gene[match(rownames(dnv_table),TADA_dnv_table$HGNC)]
-write.csv(dnv_table, file = 'figs/table.S5.csv')
+write.csv(dnv_table, file = 'figs/table.S6.csv')
 
 # remove train positive genes
 dnv_table <- dnv_table[!rownames(dnv_table) %in% train.positive,]
@@ -112,7 +112,7 @@ dnv_table$group[dnv_table$FDR<=threshold_2
 dnv_table$group[dnv_table$FDR>threshold_2 & dnv_table$TADA.FDR>threshold_2] = 'NA'
 dnv_table$label <- rownames(dnv_table)
 dnv_table$label[dnv_table$group %in% c('NA', 'both')] <- ''
-write.csv(dnv_table, file = 'figs/table.S6.csv')
+write.csv(dnv_table, file = 'figs/table.S7.csv')
 # plot comparison of log_BF and TADA.FDR
 
 p <- ggplot(dnv_table, aes(x=FDR, y=TADA.FDR, col=group, label=label)) +
