@@ -1,4 +1,5 @@
-dnv_table <- read.csv(file = 'figs/table.S5.csv', row.names = 1)
+library(ggplot2)
+dnv_table <- read.csv(file = 'figs/table.S6.csv', row.names = 1)
 # plot PPA distributions
 dnv_table$trainining.label <- "NA"
 dnv_table$trainining.label[dnv_table$train.labels==0] <- "negative"
@@ -12,3 +13,4 @@ p2 <- ggplot(dnv_table, aes(x=TADA.PPA, col=trainining.label)) +
 library(patchwork)
 p <- p1 / p2
 ggsave(p, filename = 'figs/sup.fig.7.pdf', width = 8, height = 6)
+write.csv(dnv_table, file = 'figs/sup.fig.7.csv')

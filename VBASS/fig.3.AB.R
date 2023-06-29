@@ -156,7 +156,7 @@ p <- ggplot(FDR_curve, aes(x=FDR, y=real.FDR, col=model)) +
 # geom_text_repel(size=2.5, colour='black')
 ggsave(plot = p, filename = paste0(result.folder, 'fig.3.A.pdf'),
        width = 5, height = 4)
-
+write.csv(FDR_curve, file = paste0(result.folder, 'fig.3.A.csv'))
 # precision recall, remove files in training
 dnv_table <- dnv_table[!dnv_table$in.train, ]
 dnv_table <- dnv_table[order(dnv_table$qvalue), ]
@@ -203,3 +203,4 @@ p<-ggplot(to.plot, aes(x=recall,y=precision,col=model)) +
   theme_light()
 ggsave(plot = p, filename = paste0(result.folder, 'fig.3.B.pdf'),
        width = 5, height = 4)
+write.csv(to.plot, file = paste0(result.folder, 'fig.3.B.csv'))

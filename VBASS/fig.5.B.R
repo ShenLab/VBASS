@@ -56,6 +56,7 @@ p <- ggplot(correlation_array.1, aes(x=factor(cell_type, levels = level), y=V1))
   theme(axis.text.x = element_text(angle = 90))
 
 ggsave(plot = p, filename = paste0(out.folder, "fig.5.B.1.pdf"), height = 4, width = 6)
+write.csv(correlation_array.1, file = paste0(out.folder, 'fig.5.B.1.csv'))
 
 p <- ggplot(correlation_array.2, aes(x=factor(cell_type, levels = level), y=V1)) +
   geom_point() +
@@ -70,3 +71,4 @@ p <- ggplot(correlation_array.2, aes(x=factor(cell_type, levels = level), y=V1))
   theme(axis.text.x = element_text(angle = 90))
 
 ggsave(plot = p, filename = paste0(out.folder, "fig.5.B.2.pdf"), height = 4, width = 6)
+write.csv(correlation_array.2, file = paste0(out.folder, 'fig.5.B.2.csv'))

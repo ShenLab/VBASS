@@ -129,5 +129,5 @@ p <- ggplot(dnv_table, aes(x=FDR, y=TADA.FDR, col=group, label=label)) +
   geom_text_repel(size=2.5, colour='black')
 ggsave(plot = p, filename = paste0('figs/fig.5.A.pdf'),
        width = 6, height = 6)
-
+write.csv(dnv_table, file = 'figs/fig.5.A.csv')
 

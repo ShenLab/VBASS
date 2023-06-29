@@ -7,6 +7,8 @@
   `conda env create -f MLenv.yml`
   
   `conda activate MLenv`
+  
+  Typical install time will be ~20-30 min on a normal desktop computer.
 
 ## Usage:
 

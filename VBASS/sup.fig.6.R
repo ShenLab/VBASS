@@ -233,4 +233,3 @@ p <- ggplot(to.plot.FDR[to.plot.FDR$model=="VBASS",], aes(x=FDR, y=real.FDR, col
   theme_light()
 ggsave("figs/sup.fig.6.kls.pdf", plot = p, width = 6, height = 5)
 
-

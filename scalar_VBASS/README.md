@@ -25,6 +25,8 @@ scalar_VBASS is new model to integrate functional genomics data in identifying d
   `conda env create -f rstan.yml`
   
   `conda activate rstan`
+  
+  Typical install time will be ~10-20 min on a normal desktop computer.
 
 ## Usage:
 
@@ -32,7 +34,7 @@ scalar_VBASS is new model to integrate functional genomics data in identifying d
   
   Modify the `demo.R` with your input. See input format in demo.R
   
-  Run `source(demo.R)`.
+  Run `source(demo.R)`. Expected run time will be ~15 min on a normal desktop computer.
   
 ## Result:
   

@@ -1,4 +1,6 @@
 library(patchwork)
+library(ggplot2)
+library(ggrepel)
 # Using all genes PCA, use K-means to cluster genes
 sc.input <- read.csv('VBASS.input/input.x.csv', row.names = 1)
 sc.input <- sc.input[,1:80]
@@ -124,7 +126,7 @@ p3 <- ggplot(pca.df, aes(x=PC2, y=log_pi)) +
 # ggsave(paste0("review.figs/review.fig.5.pi.k.means.1.pdf"), plot = p2, width = 6, height = 3)
 p <- p1.5 + p2 + p3
 ggsave("figs/sup.fig.5.A.pdf", plot = p, width = 10, height = 3)
-
+write.csv(pca.df, file = 'figs/sup.fig.5.csv')
 
 
 

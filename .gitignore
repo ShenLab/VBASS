@@ -6,6 +6,7 @@ scalar_VBASS_torch/
 scalar_VBASS/archive/
 VBASS/*.RDS
 VBASS/nohup.out/
+VBASS/train.real.dry.run/Debug/
 VBASS/train.simulation.out.kl.*/*.out/Debug/
 VBASS/train.simulation.out.kl.*/*.out/Log/
 .Rproj.user

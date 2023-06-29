@@ -3,7 +3,7 @@
 # 3 is whether to use certain number of epoch
 library(ggplot2)
 library(ggpubr)
-args = commandArgs(trailingOnly=TRUE)
+# args = commandArgs(trailingOnly=TRUE)
 result.folder <- 'train.simulation.out/'
 out.folder <- paste0('figs/')
 train.input <- read.csv('VBASS.simulation.with.RDS/input.x.1.csv', row.names = 1)
@@ -38,10 +38,13 @@ p <- ggplot(to.plot, aes(x=mean.pi, y=real.pi, col=group)) +
   geom_point(alpha=0.3) +
   stat_smooth(method = "lm", formula = y~x, aes(col=fake_group)) +
   stat_regline_equation(
-    aes(label =  paste(..eq.label.., ..adj.rr.label.., sep = "~~~~"), col=fake_group),
+    aes(label =  paste(after_stat(eq.label), after_stat(adj.rr.label), sep = "~~~~"), col=fake_group),
     formula = y~x
-  ) + ylim(-0.05, 0.6) + theme_bw()
+  ) +
+  ylim(-0.05, 0.6) +
+  theme_bw()
 ggsave(plot = p, filename = paste0(out.folder, "fig.3.C.pdf"), height = 5, width = 5)
+write.csv(to.plot, file = paste0(out.folder, 'fig.3.C.csv'))
 
 correlations <- c()
 cell_type <- c()
@@ -78,6 +81,6 @@ p <- ggplot(to.plot, aes(x=Simulated.correlation, y=Real.correlation, label=cell
     formula = y~x
   ) + theme_bw()
 ggsave(plot = p, filename = paste0(out.folder, "fig.3.D.pdf"), height = 5, width = 5)
-
+write.csv(to.plot, file = paste0(out.folder, 'fig.3.D.csv'))
 
 

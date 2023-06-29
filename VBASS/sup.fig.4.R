@@ -57,3 +57,4 @@ plot.complex.heatmap(training.genes.sc, row.anno = gene.labels,
                      col.anno = col.anno, title = 'Expression', split = split,
                      width = 10, height = 15, col_font_size = 6, row_dend_reorder=FALSE,
                      savefilename = 'figs/sup.fig.4.B.pdf')
+write.csv(training.genes.sc, file = 'figs/sup.fig.4.csv')
