@@ -24,10 +24,10 @@ reference$mouse_dev_rank <- dplyr::percent_rank(reference$mouse_dev)
 # if is na, set rank as 0.5
 reference$mouse_dev_rank[is.na(reference$mouse_dev_rank)] = 0.5
 # model
-modelfile = dir('model/', '.R$')
+modelfile = dir('scalar_VBASS/', '.R$')
 for (ii in modelfile) {
-  source(paste0('model/', ii))
+  source(paste0('scalar_VBASS/', ii))
 }
-result = gene_set_exttada(geneset, cases, samplenumber, reference, rankPercentileData)
+result = gene_set_scalarVBASS(geneset, cases, samplenumber, reference, rankPercentileData)
 saveRDS(result, file = "result.RDS")
 
